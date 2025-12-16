@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { teamId: string; userId: string } }
-) {
+export async function GET(request: NextRequest, event: any) {
+  const { teamId, userId } = event.params as { teamId: string; userId: string }
   try {
     const member = await db.teamMember.findUnique({
       where: {
         teamId_userId: {
-          teamId: params.teamId,
-          userId: params.userId
+          teamId,
+          userId
         }
       },
       include: {
@@ -47,10 +45,8 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { teamId: string; userId: string } }
-) {
+export async function PUT(request: NextRequest, event: any) {
+  const { teamId, userId } = event.params as { teamId: string; userId: string }
   try {
     const { permissions } = await request.json()
 
@@ -64,8 +60,8 @@ export async function PUT(
     const updatedMember = await db.teamMember.update({
       where: {
         teamId_userId: {
-          teamId: params.teamId,
-          userId: params.userId
+          teamId,
+          userId
         }
       },
       data: {

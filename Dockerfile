@@ -7,8 +7,8 @@ WORKDIR /app
 # Копирование файлов package
 COPY package*.json ./
 
-# Установка зависимостей
-RUN npm ci --only=production && npm cache clean --force
+# Используем npm ci
+RUN npm ci && npm cache clean --force
 
 # Копирование исходного кода
 COPY . .
@@ -20,7 +20,7 @@ RUN npm run build
 FROM node:20-alpine AS runner
 
 # Создание пользователя без прав для безопасности
-RUN addgroup -g nodegroup && adduser -g -G nodegroup -s /bin/sh -c "nodeuser"
+RUN addgroup nodegroup && adduser -D -G nodegroup -s /bin/sh nodeuser
 
 # Установка рабочих зависимостей только для runtime
 COPY --from=builder /app/node_modules ./node_modules
@@ -33,6 +33,9 @@ WORKDIR /app
 
 # Переключение на пользователя nodeuser
 USER nodeuser
+
+# Установка curl для healthcheck
+RUN apk update && apk add --no-cache curl
 
 # Оптимизация для production
 ENV NODE_ENV=production

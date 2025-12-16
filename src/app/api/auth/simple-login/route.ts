@@ -14,7 +14,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Try using raw query
-    const users = await db.$queryRaw`SELECT * FROM User WHERE username = ${username}`
+    const users = await db.$queryRaw<{
+      id: string
+      username: string
+      email: string
+      name: string
+    }[]>`SELECT * FROM User WHERE username = ${username}`
     console.log('Raw query result:', users)
 
     if (!users || users.length === 0) {

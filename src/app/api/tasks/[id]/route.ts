@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, event: any) {
+  const { id } = event.params as { id: string }
   try {
     const task = await db.task.findUnique({
       where: {
-        id: params.id
+        id
       },
       include: {
         creator: {
@@ -50,17 +48,15 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, event: any) {
+  const { id } = event.params as { id: string }
   try {
     const body = await request.json()
     const { title, description, priority, status, deadline, startDate, teamId, assigneeIds, shiftPriorities } = body
 
     // Get the current task
     const currentTask = await db.task.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!currentTask) {
@@ -86,7 +82,7 @@ export async function PUT(
 
     const task = await db.task.update({
       where: {
-        id: params.id
+        id
       },
       data: {
         title,
@@ -136,14 +132,12 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, event: any) {
+  const { id } = event.params as { id: string }
   try {
     await db.task.delete({
       where: {
-        id: params.id
+        id
       }
     })
 

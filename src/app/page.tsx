@@ -430,6 +430,20 @@ export default function Home() {
     return membership?.permissions || ''
   }
 
+  const canViewTask = (task: Task) => {
+    const team = teams.find(t => t.id === task.team.id)
+    if (!team || !user) return false
+    
+    const membership = team.members.find(m => m.user.id === user.id)
+    if (!membership) return false
+    
+    if (team.creator.id === user.id || membership.role === 'admin') {
+      return true
+    }
+
+    return hasPermission(membership.permissions, 'view')
+  }
+
   const updateMemberPermissions = async (teamId: string, userId: string, permissions: string) => {
     try {
       const response = await fetch(`/api/teams/${teamId}/members/${userId}`, {
@@ -969,21 +983,6 @@ export default function Home() {
             const isOverdue = daysUntilDeadline < 0
             const isUrgent = daysUntilDeadline <= 3 && daysUntilDeadline >= 0
             const canComplete = task.team.id && userTeams.some(t => t.id === task.team.id)
-  const canViewTask = (task: Task) => {
-    const team = teams.find(t => t.id === task.team.id)
-    if (!team || !user) return false
-    
-    const membership = team.members.find(m => m.user.id === user.id)
-    if (!membership) return false
-    
-    // Admin can always view
-    if (team.creator.id === user.id || membership.role === 'admin') {
-      return true
-    }
-    
-    // Members need view permission
-    return hasPermission(membership.permissions, 'view')
-  }
 
             return (
               <Card key={task.id} className="hover:shadow-md transition-shadow">

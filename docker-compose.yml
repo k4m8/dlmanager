@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   task-manager:
     build: 
@@ -17,7 +15,8 @@ services:
       - task_logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000", "||", "exit", "1"]
+      # Используем sh -c для выполнения команды с оператором ||
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:3000 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -9,7 +9,6 @@ export async function GET() {
         name: true,
         email: true,
         role: true,
-        team: true,
         createdAt: true,
         _count: {
           select: {
@@ -36,11 +35,17 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, email, role, team } = body
+    const { name, email, role, username } = body
 
     if (!email) {
       return NextResponse.json(
         { error: 'Email is required' },
+        { status: 400 }
+      )
+    }
+    if (!username) {
+      return NextResponse.json(
+        { error: 'Username is required' },
         { status: 400 }
       )
     }
@@ -50,7 +55,7 @@ export async function POST(request: Request) {
         name,
         email,
         role: role || 'member',
-        team
+        username
       }
     })
 

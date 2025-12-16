@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { teamId: string } }
-) {
+export async function PUT(request: NextRequest, event: any) {
+  const { teamId } = event.params as { teamId: string }
   try {
     const { userId, permissions } = await request.json()
 
@@ -21,8 +19,8 @@ export async function PUT(
     const updatedMember = await db.teamMember.update({
       where: {
         teamId_userId: {
-          teamId: params.teamId,
-          userId: userId
+          teamId,
+          userId
         }
       },
       data: {
