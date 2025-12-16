@@ -25,20 +25,21 @@ FROM node:20-alpine AS runner
 # Создание пользователя без прав для безопасности
 RUN addgroup nodegroup && adduser -D -G nodegroup -s /bin/sh nodeuser
 
-# Установка рабочих зависимостей только для runtime
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next/standalone ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package*.json ./
-
-# Настройка рабочего каталога
+# Устанавливаем рабочий каталог до копирования файлов, чтобы всё шло в /app
 WORKDIR /app
 
-# Установка curl для healthcheck (выполняем как root до переключения на nodeuser)
-RUN apk update && apk add --no-cache curl
+# Установка рабочих зависимостей только для runtime
+COPY --from=builder /app/node_modules ./node_modules
+RUN mkdir -p .next/standalone
+COPY --from=builder /app/.next/standalone ./.next/standalone
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/prisma ./prisma
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Переключение на пользователя nodeuser
-USER nodeuser
+# Установка curl и su-exec для healthcheck/entrypoint (выполняем как root)
+RUN apk update && apk add --no-cache curl su-exec
 
 # Оптимизация для production
 ENV NODE_ENV=production
@@ -48,6 +49,7 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 EXPOSE 3000
 
 # Запуск приложения
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["node", ".next/standalone/server.js"]
 
 # Health check
