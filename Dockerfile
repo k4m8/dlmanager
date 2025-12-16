@@ -13,6 +13,9 @@ RUN npm ci && npm cache clean --force
 # Копирование исходного кода
 COPY . .
 
+# Генерируем Prisma клиент перед сборкой, чтобы .next содержит готовый файл
+RUN npm run db:generate
+
 # Сборка приложения
 RUN npm run build
 
@@ -31,11 +34,11 @@ COPY --from=builder /app/package*.json ./
 # Настройка рабочего каталога
 WORKDIR /app
 
+# Установка curl для healthcheck (выполняем как root до переключения на nodeuser)
+RUN apk update && apk add --no-cache curl
+
 # Переключение на пользователя nodeuser
 USER nodeuser
-
-# Установка curl для healthcheck
-RUN apk update && apk add --no-cache curl
 
 # Оптимизация для production
 ENV NODE_ENV=production
