@@ -1,0 +1,45 @@
+# Dockerfile для production сборки
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Установка зависимостей
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Копирование исходного кода
+COPY . .
+
+# Сборка приложения
+RUN npm run build
+
+# Production runtime
+FROM node:20-alpine AS runner
+
+# Создание пользователя без прав
+RUN addgroup -g nodegroup && adduser -g -G nodegroup -s /bin/sh -c "nodeuser"
+
+# Копирование production артефактов
+COPY --from=builder /app/.next/standalone ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package*.json ./
+
+# Настройка рабочего каталога
+WORKDIR /app
+
+# Переключение на пользователя
+USER nodeuser
+
+# Production переменные окружения
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# Открываем порты
+EXPOSE 80 443
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:80/api/health || exit 1
+
+# Запуск приложения
+CMD ["node", ".next/standalone/server.js"]

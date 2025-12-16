@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  task-manager:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: task-manager:latest
+    container_name: task-manager-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./app/dev.db
+    volumes:
+      - task_data:/app/data
+      - task_logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - task-network
+
+volumes:
+  task_data:
+    driver: local
+  task_logs:
+    driver: local
+
+networks:
+  task-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
